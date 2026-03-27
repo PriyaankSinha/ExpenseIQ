@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --color-slate-950: #020617;
+  --color-slate-900: #0f172a;
+  --color-slate-800: #1e293b;
+  --color-slate-700: #334155;
+  --color-slate-600: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-400: #94a3b8;
+  --color-slate-300: #cbd5e1;
+  --color-slate-200: #e2e8f0;
+  --color-slate-100: #f1f5f9;
+
+  --color-emerald-950: #022c22;
+  --color-emerald-900: #064e3b;
+  --color-emerald-800: #065f46;
+  --color-emerald-700: #047857;
+  --color-emerald-600: #059669;
+  --color-emerald-500: #10b981;
+  --color-emerald-400: #34d399;
+  --color-emerald-300: #6ee7b7;
+
+  --color-rose-500: #f43f5e;
+  --color-rose-400: #fb7185;
+  --color-amber-500: #f59e0b;
+  --color-amber-400: #fbbf24;
+  --color-sky-500: #0ea5e9;
+  --color-sky-400: #38bdf8;
+  --color-purple-500: #a855f7;
+  --color-purple-400: #c084fc;
+}
+
+@layer base {
+  /* Base */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-slate-700) transparent;
+  }
+
+  body {
+    background: var(--color-slate-950);
+    min-height: 100vh;
+  }
+
+  /* Restore pointer cursor for buttons (removed in Tailwind v4) */
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  /* Glassmorphism Card */
+  .glass-card {
+    background: linear-gradient(
+      135deg,
+      rgba(30, 41, 59, 0.7),
+      rgba(15, 23, 42, 0.8)
+    );
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 1rem;
+  }
+
+  .glass-card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card-hover:hover {
+    border-color: rgba(52, 211, 153, 0.3);
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.08);
+    transform: translateY(-2px);
+  }
+
+  /* Gradient Text */
+  .gradient-text {
+    background: linear-gradient(135deg, #34d399, #10b981, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Subtle Glow */
+  .glow-emerald {
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.15),
+                0 0 80px rgba(16, 185, 129, 0.05);
+  }
+
+  /* Animated Background Blob */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Input Styles */
+  .input-dark {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 0.75rem;
+    padding: 0.625rem 1rem;
+    color: var(--color-slate-100);
+    transition: all 0.2s ease;
+    outline: none;
+    width: 100%;
+  }
+
+  /* Hide number arrows */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  .input-dark:focus {
+    border-color: var(--color-emerald-500);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  }
+
+  .input-dark::placeholder {
+    color: var(--color-slate-500);
+  }
+
+  /* Button Styles */
+  .btn-primary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    font-weight: 600;
+    padding: 0.625rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-slate-300);
+    font-weight: 500;
+    padding: 0.625rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    cursor: pointer;
+  }
+
+  .btn-ghost:hover {
+    background: rgba(148, 163, 184, 0.08);
+    border-color: rgba(148, 163, 184, 0.25);
+  }
+
+  /* Shimmer */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(16, 185, 129, 0.1) 25%,
+      rgba(16, 185, 129, 0.2) 50%,
+      rgba(16, 185, 129, 0.1) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Spinner */
+  .spinner {
+    border: 3px solid rgba(148, 163, 184, 0.2);
+    border-top-color: var(--color-emerald-500);
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
