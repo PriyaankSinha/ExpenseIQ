@@ -58,7 +58,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 px-3 space-y-1">
+      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto overflow-x-hidden">
         {navItems.map(({ to, icon: Icon, label }) => {
           const isActive = location.pathname === to
           return (
@@ -79,7 +79,7 @@ export default function Sidebar() {
                 />
               )}
               <Icon className="w-5 h-5 shrink-0" />
-              <AnimatePresence>
+              <AnimatePresence mode="wait">
                 {sidebarOpen && (
                   <motion.span
                     initial={{ opacity: 0, x: -10 }}
@@ -97,13 +97,13 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="px-3 pb-4 space-y-1">
+      <div className="px-3 pb-4 space-y-4">
         <button
           onClick={() => signOut()}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 w-full"
         >
           <LogOut className="w-5 h-5 shrink-0" />
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {sidebarOpen && (
               <motion.span
                 initial={{ opacity: 0, x: -10 }}
@@ -117,17 +117,34 @@ export default function Sidebar() {
           </AnimatePresence>
         </button>
 
-        <button
-          onClick={() => dispatch(toggleSidebar())}
-          className="flex items-center justify-center w-full py-2 rounded-xl text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-all duration-200"
-        >
-          {sidebarOpen ? (
-            <ChevronLeft className="w-5 h-5" />
-          ) : (
-            <ChevronRight className="w-5 h-5" />
+        <AnimatePresence mode="wait">
+          {sidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="px-3 py-2 border-t border-slate-800/60"
+            >
+              <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+                © {new Date().getFullYear()} All rights reserved<br />
+                <span className="text-emerald-500/80 font-medium">@Priyaank Sinha</span>
+              </p>
+            </motion.div>
           )}
-        </button>
+        </AnimatePresence>
       </div>
+
+      {/* Toggle Button - Circular & Floating */}
+      <button
+        onClick={() => dispatch(toggleSidebar())}
+        className="absolute -right-3 top-5 w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 shadow-lg flex items-center justify-center transition-all duration-200 z-50 group"
+      >
+        {sidebarOpen ? (
+          <ChevronLeft className="w-3.5 h-3.5" />
+        ) : (
+          <ChevronRight className="w-3.5 h-3.5" />
+        )}
+      </button>
     </motion.aside>
   )
 }
