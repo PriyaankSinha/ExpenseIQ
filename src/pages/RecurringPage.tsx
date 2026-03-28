@@ -88,7 +88,7 @@ export default function RecurringPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Recurring Expenses</h1>
           <p className="text-sm text-slate-500 mt-1">Manage subscriptions & repeating bills</p>
@@ -98,7 +98,7 @@ export default function RecurringPage() {
             if (showAdd) cancelAddOrEdit()
             else { setEditingId(null); setForm(defaultForm); setShowAdd(true) }
           }}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           {showAdd ? <X className="w-4 h-4"/> : <Plus className="w-4 h-4" />}
           {showAdd ? 'Cancel' : 'Add New'}
@@ -187,7 +187,8 @@ export default function RecurringPage() {
               </BentoCard>
             ) : (
               <BentoCard className={`transition-opacity ${!item.active ? 'opacity-50' : ''}`}>
-                 <div className="flex items-center justify-between">
+                 {/* Desktop View */}
+                 <div className="hidden sm:flex items-center justify-between">
                    <div className="flex items-center gap-4">
                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm"
                         style={{ backgroundColor: `${item.category?.color || '#fff'}20`, color: item.category?.color }}
@@ -229,6 +230,54 @@ export default function RecurringPage() {
                        <Trash2 className="w-4 h-4" />
                      </button>
                    </div>
+                 </div>
+
+                 {/* Mobile View */}
+                 <div className="flex sm:hidden flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm"
+                           style={{ backgroundColor: `${item.category?.color || '#fff'}20`, color: item.category?.color }}
+                        >
+                          {item.merchant?.charAt(0) || item.category?.name.charAt(0) || '?'}
+                        </div>
+                        <div className="flex flex-col">
+                          <h3 className="font-semibold text-slate-100">{item.merchant || 'Subscription'}</h3>
+                          <p className="text-xs text-slate-500 capitalize">{item.frequency} • {item.category?.name}</p>
+                        </div>
+                      </div>
+                      <span className="text-base font-bold text-slate-100">{fmt(item.amount)}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between border-t border-slate-800/40 pt-3">
+                      <span className="text-xs text-slate-500 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" /> Next Due: {format(parseISO(item.next_due_date), 'MMM dd, yyyy')}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleRecurring.mutate({ id: item.id, active: !item.active })}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                            item.active 
+                              ? 'border-slate-700 text-slate-300 active:bg-slate-800' 
+                              : 'border-emerald-500/30 text-emerald-400 active:bg-emerald-500/10'
+                          }`}
+                        >
+                          {item.active ? 'Pause' : 'Play'}
+                        </button>
+                        <button
+                          onClick={() => startEdit(item)}
+                          className="p-2 rounded-lg bg-slate-800/50 text-slate-400 active:text-sky-400 transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(item.id)}
+                          className="p-2 rounded-lg bg-slate-800/50 text-slate-400 active:text-rose-400 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                  </div>
               </BentoCard>
             )}

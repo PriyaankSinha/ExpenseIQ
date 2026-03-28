@@ -221,7 +221,7 @@ export default function GoalsPage() {
                   <BentoCard className="relative overflow-hidden h-full flex flex-col justify-between group">
                     {/* Progress bg */}
                     <div
-                      className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
+                      className="absolute bottom-0 left-0 h-1 bg-linear-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
                       style={{ width: `${progress}%` }}
                     />
 
@@ -242,7 +242,7 @@ export default function GoalsPage() {
                             </p>
                             )}
                         </div>
-                        <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-1.5 transition-opacity">
                             <button
                             onClick={() => startEdit(goal)}
                             className="p-1.5 rounded-lg text-slate-500 hover:text-sky-400 hover:bg-sky-500/10 transition-colors"
@@ -275,7 +275,7 @@ export default function GoalsPage() {
                             initial={{ width: 0 }}
                             animate={{ width: `${progress}%` }}
                             transition={{ duration: 1, ease: 'easeOut' }}
-                            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full"
+                            className="h-full bg-linear-to-r from-emerald-500 to-emerald-400 rounded-full"
                             />
                         </div>
                         <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">

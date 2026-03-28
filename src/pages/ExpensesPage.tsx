@@ -122,7 +122,7 @@ export default function ExpensesPage() {
       className="space-y-6"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Expenses</h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -134,7 +134,7 @@ export default function ExpensesPage() {
             if (showAddForm || editingId) cancelAddOrEdit()
             else setShowAddForm(true)
           }}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           {showAddForm || editingId ? <X className="w-4 h-4"/> : <Plus className="w-4 h-4" />}
           {showAddForm || editingId ? 'Cancel' : 'Add Expense'}
@@ -251,57 +251,117 @@ export default function ExpensesPage() {
                 key={expense.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex items-center justify-between py-3 group"
+                className="py-3 group"
               >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium"
-                    style={{
-                      backgroundColor: `${expense.category?.color || '#64748b'}20`,
-                      color: expense.category?.color || '#64748b',
-                    }}
-                  >
-                    {expense.category?.name?.charAt(0) || '?'}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-200">
-                      {expense.merchant || expense.category?.name || 'Expense'}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span>{expense.category?.name}</span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {format(new Date(expense.date), 'MMM dd, yyyy')}
-                      </span>
-                      {expense.note && (
-                        <>
-                          <span>•</span>
-                          <span className="truncate max-w-[200px]">{expense.note}</span>
-                        </>
-                      )}
+                {/* Desktop Version */}
+                <div className="hidden sm:flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium"
+                      style={{
+                        backgroundColor: `${expense.category?.color || '#64748b'}20`,
+                        color: expense.category?.color || '#64748b',
+                      }}
+                    >
+                      {expense.category?.name?.charAt(0) || '?'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-200">
+                        {expense.merchant || expense.category?.name || 'Expense'}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <span>{expense.category?.name}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {format(new Date(expense.date), 'MMM dd, yyyy')}
+                        </span>
+                        {expense.note && (
+                          <>
+                            <span>•</span>
+                            <span className="truncate max-w-[200px]">{expense.note}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold text-slate-200 mr-2">
+                      -{fmt(expense.amount)}
+                    </span>
+                    <button
+                      onClick={() => {
+                        startEdit(expense)
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      className="p-1.5 rounded-lg text-slate-600 hover:text-sky-400 hover:bg-sky-500/10 transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(expense.id)}
+                      className="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 transition-opacity">
-                  <span className="text-sm font-semibold text-slate-200 mr-2">
-                    -{fmt(expense.amount)}
-                  </span>
-                  <button
-                    onClick={() => {
-                      startEdit(expense)
-                      window.scrollTo({ top: 0, behavior: 'smooth' })
-                    }}
-                    className="p-1.5 rounded-lg text-slate-600 hover:text-sky-400 hover:bg-sky-500/10 transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setConfirmDeleteId(expense.id)}
-                    className="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+
+                {/* Mobile Version (Card Style) */}
+                <div className="flex sm:hidden flex-col gap-3">
+                   <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium"
+                          style={{
+                            backgroundColor: `${expense.category?.color || '#64748b'}20`,
+                            color: expense.category?.color || '#64748b',
+                          }}
+                        >
+                          {expense.category?.name?.charAt(0) || '?'}
+                        </div>
+                        <div className="flex flex-col">
+                          <p className="text-sm font-semibold text-slate-100">
+                            {expense.merchant || expense.category?.name || 'Expense'}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {expense.category?.name}
+                          </p>
+                        </div>
+                     </div>
+                     <span className="text-base font-bold text-slate-100">
+                        -{fmt(expense.amount)}
+                     </span>
+                   </div>
+
+                   <div className="flex items-center justify-between mt-1">
+                      <div className="flex flex-col gap-1">
+                        <span className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wider">
+                          <Calendar className="w-3 h-3" />
+                          {format(new Date(expense.date), 'MMM dd, yyyy')}
+                        </span>
+                        {expense.note && (
+                          <p className="text-xs text-slate-400 italic line-clamp-1">{expense.note}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            startEdit(expense)
+                            window.scrollTo({ top: 0, behavior: 'smooth' })
+                          }}
+                          className="p-2 rounded-lg bg-slate-800/50 text-slate-400 active:text-sky-400 active:bg-sky-500/10 transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(expense.id)}
+                          className="p-2 rounded-lg bg-slate-800/50 text-slate-400 active:text-rose-400 active:bg-rose-500/10 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                   </div>
                 </div>
               </motion.div>
             ))}

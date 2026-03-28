@@ -1,7 +1,23 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function LeadGenAssistant() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
   useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    if (isMobile) {
+      // Cleanup any existing widget if we transition to mobile
+      const existingScript = document.querySelector('script[src*="leadgenaiassistant"]')
+      if (existingScript) existingScript.remove()
+      document.querySelectorAll('iframe[src*="leadgenaiassistant"]').forEach((el) => el.remove())
+      return
+    }
+
     const script = document.createElement('script')
     script.src = 'https://leadgenaiassistant.vercel.app/widget.js'
     script.async = true
@@ -15,7 +31,7 @@ export default function LeadGenAssistant() {
         'iframe[src*="leadgenaiassistant"]'
       ).forEach((el) => el.remove())
     }
-  }, [])
+  }, [isMobile])
 
   return null
 }

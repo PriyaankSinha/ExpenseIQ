@@ -77,14 +77,14 @@ export default function CategoriesPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Categories & Budgets</h1>
           <p className="text-sm text-slate-500 mt-1">Manage where your money goes</p>
         </div>
         <button
           onClick={() => setShowAdd(!showAdd)}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           {showAdd ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           {showAdd ? 'Cancel' : 'Add Category'}
@@ -97,27 +97,31 @@ export default function CategoriesPage() {
             <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
               <Activity className="w-4 h-4 text-emerald-400" /> Create Custom Category
             </h3>
-            <div className="flex gap-2">
-              <input 
-                type="color" 
-                value={newCatColor} 
-                onChange={(e) => setNewCatColor(e.target.value)} 
-                className="w-10 h-10 rounded cursor-pointer shrink-0 border-0 bg-transparent p-0"
-              />
-              <input
-                type="text"
-                placeholder="E.g., Dog Toys, Subscription, Hobby..."
-                value={newCatName}
-                onChange={(e) => setNewCatName(e.target.value)}
-                className="input-dark flex-1"
-                disabled={addingAI}
-              />
-              <button type="button" onClick={() => setShowAdd(false)} disabled={addingAI} className="px-4 text-slate-400 hover:text-slate-200">
-                Cancel
-              </button>
-              <button disabled={addingAI} onClick={handleAddCustom} className="btn-primary">
-                {addingAI ? 'Creating...' : 'Create'}
-              </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex gap-2 flex-1">
+                <input 
+                  type="color" 
+                  value={newCatColor} 
+                  onChange={(e) => setNewCatColor(e.target.value)} 
+                  className="w-10 h-10 rounded-lg cursor-pointer shrink-0 border border-slate-700/50 bg-slate-900/40 p-1"
+                />
+                <input
+                  type="text"
+                  placeholder="E.g., Dog Toys, Subscription, Hobby..."
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  className="input-dark flex-1"
+                  disabled={addingAI}
+                />
+              </div>
+              <div className="flex gap-2 sm:shrink-0">
+                <button type="button" onClick={() => setShowAdd(false)} disabled={addingAI} className="flex-1 sm:flex-none px-4 py-2 text-sm text-slate-400 hover:text-slate-200">
+                  Cancel
+                </button>
+                <button disabled={addingAI} onClick={handleAddCustom} className="btn-primary flex-1 sm:flex-none">
+                  {addingAI ? 'Creating...' : 'Create'}
+                </button>
+              </div>
             </div>
           </BentoCard>
         </motion.div>

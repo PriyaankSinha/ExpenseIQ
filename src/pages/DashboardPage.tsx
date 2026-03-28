@@ -309,34 +309,39 @@ export default function DashboardPage() {
                 No expenses yet. Try the smart input above!
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {recentExpenses.map((expense) => (
                   <div
                     key={expense.id}
-                    className="flex items-center justify-between py-2 border-b border-slate-800/40 last:border-0"
+                    className="flex flex-col gap-2 py-2 border-b border-slate-800/40 last:border-0"
                   >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center text-sm"
-                        style={{
-                          backgroundColor: `${expense.category?.color || '#64748b'}20`,
-                          color: expense.category?.color || '#64748b',
-                        }}
-                      >
-                        {expense.category?.name?.charAt(0) || '?'}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-9 h-9 rounded-xl flex items-center justify-center text-sm"
+                          style={{
+                            backgroundColor: `${expense.category?.color || '#64748b'}20`,
+                            color: expense.category?.color || '#64748b',
+                          }}
+                        >
+                          {expense.category?.name?.charAt(0) || '?'}
+                        </div>
+                        <div className="truncate">
+                          <p className="text-sm font-medium text-slate-200 truncate">
+                            {expense.merchant || expense.category?.name || 'Expense'}
+                          </p>
+                          <p className="text-xs text-slate-500 truncate">
+                            {expense.category?.name}
+                          </p>
+                        </div>
                       </div>
-                      <div className="truncate">
-                        <p className="text-sm font-medium text-slate-200 truncate">
-                          {expense.merchant || expense.category?.name || 'Expense'}
-                        </p>
-                        <p className="text-xs text-slate-500 truncate">
-                          {expense.category?.name} • {format(new Date(expense.date), 'MMM dd')}
-                        </p>
-                      </div>
+                      <span className="text-sm font-semibold text-slate-200 shrink-0 ml-2">
+                        -{fmt(expense.amount)}
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold text-slate-200 shrink-0 ml-2">
-                      -{fmt(expense.amount)}
-                    </span>
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 uppercase tracking-wider">
+                      <span>{format(new Date(expense.date), 'MMM dd, yyyy')}</span>
+                    </div>
                   </div>
                 ))}
               </div>
