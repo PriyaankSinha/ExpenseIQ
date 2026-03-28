@@ -5,6 +5,7 @@ export interface Profile {
   currency: string
   notification_time: string | null
   last_notified_at: string | null
+  timezone: string
 }
 
 export interface Category {

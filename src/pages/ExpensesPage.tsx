@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Trash2, Search, Filter, Calendar, Receipt } from 'lucide-react'
+import { Plus, Trash2, Search, Filter, Calendar, Receipt, Edit2, X } from 'lucide-react'
 import BentoCard from '@/components/ui/BentoCard'
 import CustomDatePicker from '@/components/ui/CustomDatePicker'
 import CustomSelect from '@/components/ui/CustomSelect'
-import { useExpenses, useAddExpense, useDeleteExpense } from '@/hooks/useExpenses'
+import ConfirmModal from '@/components/modals/ConfirmModal'
+import { useExpenses, useAddExpense, useDeleteExpense, useUpdateExpense } from '@/hooks/useExpenses'
 import { useCategories } from '@/hooks/useCategories'
 import { format } from 'date-fns'
 import { useProfile } from '@/hooks/useProfile'
@@ -16,20 +17,46 @@ export default function ExpensesPage() {
   const addExpense = useAddExpense()
   const { data: profile } = useProfile()
 
+  const updateExpense = useUpdateExpense()
+
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [monthFilter, setMonthFilter] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
-  const [newExpense, setNewExpense] = useState({
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  
+  const defaultForm = {
     amount: '',
     category_id: '',
     merchant: '',
     date: format(new Date(), 'yyyy-MM-dd'),
     note: '',
-  })
+  }
+  
+  const [form, setForm] = useState(defaultForm)
 
   const currency = profile?.currency || 'USD'
   const fmt = (n: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n)
+
+  const monthOptions = useMemo(() => {
+    const uniqueMonths = new Set<string>()
+    expenses.forEach(e => {
+        if (e.date) uniqueMonths.add(e.date.slice(0, 7))
+    })
+    
+    return Array.from(uniqueMonths)
+      .sort((a, b) => b.localeCompare(a)) // Sort desc (recent first)
+      .map(monthStr => {
+        const parts = monthStr.split('-')
+        const d = new Date(parseInt(parts[0] || '0', 10), parseInt(parts[1] || '0', 10) - 1, 1)
+        return {
+           label: format(d, 'MMMM yyyy'),
+           value: monthStr
+        }
+      })
+  }, [expenses])
 
   const filtered = useMemo(() => {
     return expenses.filter((e) => {
@@ -39,21 +66,53 @@ export default function ExpensesPage() {
         e.note?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         e.category?.name?.toLowerCase().includes(searchQuery.toLowerCase())
       const matchCategory = !categoryFilter || e.category_id === categoryFilter
-      return matchSearch && matchCategory
+      const matchMonth = !monthFilter || (e.date && e.date.startsWith(monthFilter))
+      return matchSearch && matchCategory && matchMonth
     })
-  }, [expenses, searchQuery, categoryFilter])
+  }, [expenses, searchQuery, categoryFilter, monthFilter])
 
-  const handleAdd = async () => {
-    if (!newExpense.amount || !newExpense.category_id) return
-    await addExpense.mutateAsync({
-      amount: parseFloat(newExpense.amount),
-      category_id: newExpense.category_id,
-      merchant: newExpense.merchant || null,
-      date: newExpense.date,
-      note: newExpense.note || null,
+  const handleSave = async () => {
+    if (!form.amount || !form.category_id) return
+    
+    if (editingId) {
+      await updateExpense.mutateAsync({
+        id: editingId,
+        amount: parseFloat(form.amount),
+        category_id: form.category_id,
+        merchant: form.merchant || null,
+        date: form.date,
+        note: form.note || null,
+      })
+      setEditingId(null)
+    } else {
+      await addExpense.mutateAsync({
+        amount: parseFloat(form.amount),
+        category_id: form.category_id,
+        merchant: form.merchant || null,
+        date: form.date,
+        note: form.note || null,
+      })
+      setShowAddForm(false)
+    }
+    setForm(defaultForm)
+  }
+
+  const startEdit = (e: any) => {
+    setForm({
+      amount: e.amount.toString(),
+      category_id: e.category_id,
+      merchant: e.merchant || '',
+      date: e.date,
+      note: e.note || '',
     })
-    setNewExpense({ amount: '', category_id: '', merchant: '', date: format(new Date(), 'yyyy-MM-dd'), note: '' })
+    setEditingId(e.id)
     setShowAddForm(false)
+  }
+
+  const cancelAddOrEdit = () => {
+    setShowAddForm(false)
+    setEditingId(null)
+    setForm(defaultForm)
   }
 
   return (
@@ -71,16 +130,19 @@ export default function ExpensesPage() {
           </p>
         </div>
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            if (showAddForm || editingId) cancelAddOrEdit()
+            else setShowAddForm(true)
+          }}
           className="btn-primary flex items-center gap-2"
         >
-          <Plus className="w-4 h-4" />
-          Add Expense
+          {showAddForm || editingId ? <X className="w-4 h-4"/> : <Plus className="w-4 h-4" />}
+          {showAddForm || editingId ? 'Cancel' : 'Add Expense'}
         </button>
       </div>
 
-      {/* Add Form */}
-      {showAddForm && (
+      {/* Add/Edit Form */}
+      {(showAddForm || editingId) && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
@@ -88,42 +150,55 @@ export default function ExpensesPage() {
           className="relative z-50"
         >
           <BentoCard>
-            <h3 className="text-sm font-semibold text-slate-200 mb-4">New Expense</h3>
+            <h3 className="text-sm font-semibold text-slate-200 mb-4 flex justify-between">
+              {editingId ? 'Edit Expense' : 'New Expense'}
+              {editingId && (
+                <button onClick={cancelAddOrEdit} className="text-slate-500 hover:text-slate-300">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               <input
                 type="number"
                 placeholder="Amount"
-                value={newExpense.amount}
-                onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
                 className="input-dark"
               />
               <CustomSelect
-                value={newExpense.category_id}
-                onChange={(v) => setNewExpense({ ...newExpense, category_id: v })}
+                value={form.category_id}
+                onChange={(v) => setForm({ ...form, category_id: v })}
                 options={categories.map((c) => ({ label: c.name, value: c.id, color: c.color }))}
                 placeholder="Category"
               />
               <input
                 type="text"
                 placeholder="Merchant"
-                value={newExpense.merchant}
-                onChange={(e) => setNewExpense({ ...newExpense, merchant: e.target.value })}
+                value={form.merchant}
+                onChange={(e) => setForm({ ...form, merchant: e.target.value })}
                 className="input-dark"
               />
               <CustomDatePicker
-                value={newExpense.date}
-                onChange={(v) => setNewExpense({ ...newExpense, date: v })}
+                value={form.date}
+                onChange={(v) => setForm({ ...form, date: v })}
                 placeholder="Date"
               />
-              <button onClick={handleAdd} disabled={addExpense.isPending} className="btn-primary">
-                {addExpense.isPending ? 'Adding...' : 'Add'}
+              <button 
+                onClick={handleSave} 
+                disabled={addExpense.isPending || updateExpense.isPending} 
+                className="btn-primary"
+              >
+                {editingId 
+                  ? (updateExpense.isPending ? 'Saving...' : 'Save') 
+                  : (addExpense.isPending ? 'Adding...' : 'Add')}
               </button>
             </div>
             <input
               type="text"
               placeholder="Note (optional)"
-              value={newExpense.note}
-              onChange={(e) => setNewExpense({ ...newExpense, note: e.target.value })}
+              value={form.note}
+              onChange={(e) => setForm({ ...form, note: e.target.value })}
               className="input-dark mt-3"
             />
           </BentoCard>
@@ -131,22 +206,29 @@ export default function ExpensesPage() {
       )}
 
       {/* Filters */}
-      <div className="flex gap-3 relative z-40">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex gap-3 relative z-40 flex-wrap sm:flex-nowrap">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
             type="text"
             placeholder="Search expenses..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-dark pl-10 py-2 text-sm"
+            className="input-dark pl-10 py-2 text-sm w-full"
           />
         </div>
+        <CustomSelect
+          value={monthFilter}
+          onChange={(v) => setMonthFilter(v)}
+          options={[{ label: 'All Time', value: '' }, ...monthOptions]}
+          className="w-full sm:w-40 shrink-0"
+          icon={<Calendar className="w-4 h-4" />}
+        />
         <CustomSelect
           value={categoryFilter}
           onChange={(v) => setCategoryFilter(v)}
           options={[{ label: 'All Categories', value: '' }, ...categories.map((c) => ({ label: c.name, value: c.id, color: c.color }))]}
-          className="w-48"
+          className="w-full sm:w-48 shrink-0"
           icon={<Filter className="w-4 h-4" />}
         />
       </div>
@@ -201,13 +283,22 @@ export default function ExpensesPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-slate-200">
+                <div className="flex items-center gap-1.5 transition-opacity">
+                  <span className="text-sm font-semibold text-slate-200 mr-2">
                     -{fmt(expense.amount)}
                   </span>
                   <button
-                    onClick={() => deleteExpense.mutate(expense.id)}
-                    className="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                    onClick={() => {
+                      startEdit(expense)
+                      window.scrollTo({ top: 0, behavior: 'smooth' })
+                    }}
+                    className="p-1.5 rounded-lg text-slate-600 hover:text-sky-400 hover:bg-sky-500/10 transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setConfirmDeleteId(expense.id)}
+                    className="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -217,6 +308,18 @@ export default function ExpensesPage() {
           </div>
         )}
       </BentoCard>
+
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Delete Expense"
+        message="Are you sure you want to delete this expense? This action cannot be undone."
+        confirmText="Delete"
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId) deleteExpense.mutate(confirmDeleteId)
+          setConfirmDeleteId(null)
+        }}
+      />
     </motion.div>
   )
 }

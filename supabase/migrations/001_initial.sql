@@ -74,21 +74,7 @@ create policy "Users can delete own categories"
   on public.categories for delete
   using (user_id = auth.uid());
 
--- Seed system-default categories
-insert into public.categories (name, icon, color, user_id) values
-  ('Food', 'utensils', '#f97316', null),
-  ('Transport', 'car', '#3b82f6', null),
-  ('Shopping', 'shopping-bag', '#ec4899', null),
-  ('Entertainment', 'gamepad-2', '#8b5cf6', null),
-  ('Healthcare', 'heart-pulse', '#ef4444', null),
-  ('Bills', 'file-text', '#f59e0b', null),
-  ('Education', 'book-open', '#06b6d4', null),
-  ('Travel', 'plane', '#14b8a6', null),
-  ('Groceries', 'apple', '#22c55e', null),
-  ('Coffee', 'coffee', '#a16207', null),
-  ('Rent', 'home', '#6366f1', null),
-  ('Subscriptions', 'credit-card', '#d946ef', null)
-on conflict do nothing;
+-- System-default categories have been removed. All categories are now strictly custom-created.
 
 -- ============================================
 -- EXPENSES

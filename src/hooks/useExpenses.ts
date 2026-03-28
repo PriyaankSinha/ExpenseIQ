@@ -86,3 +86,34 @@ export function useDeleteExpense() {
     },
   })
 }
+
+export function useUpdateExpense() {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  return useMutation({
+    mutationFn: async (expense: {
+      id: string
+      amount: number
+      category_id: string
+      merchant?: string | null
+      date: string
+      note?: string | null
+    }) => {
+      const { id, ...updates } = expense
+      const { data, error } = await supabase
+        .from('expenses')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user!.id)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+    },
+  })
+}

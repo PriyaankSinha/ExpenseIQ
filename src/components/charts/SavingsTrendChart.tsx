@@ -52,7 +52,7 @@ export default function SavingsTrendChart({ savingsData }: SavingsTrendChartProp
   }
 
   return (
-    <div className="h-64 w-full">
+    <div className="h-full w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
           <defs>

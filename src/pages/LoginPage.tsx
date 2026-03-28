@@ -91,6 +91,11 @@ export default function LoginPage() {
                 className="input-dark pl-10"
               />
             </div>
+            <div className="flex justify-end mt-1.5">
+              <Link to="/forgot-password" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <button

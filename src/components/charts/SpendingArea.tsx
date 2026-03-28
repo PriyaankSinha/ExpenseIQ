@@ -46,7 +46,7 @@ export default function SpendingArea({ expenses, days = 30 }: SpendingAreaProps)
   }))
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
         <defs>
           <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
@@ -76,6 +76,7 @@ export default function SpendingArea({ expenses, days = 30 }: SpendingAreaProps)
             color: '#f1f5f9',
             fontSize: '0.875rem',
           }}
+          itemStyle={{ color: '#f8fafc' }}
           formatter={(value: number) => [fmt(value), 'Spent']}
           labelFormatter={(label) => `${label}`}
         />

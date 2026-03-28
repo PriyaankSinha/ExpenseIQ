@@ -12,6 +12,8 @@ import SettingsPage from '@/pages/SettingsPage'
 import LoginPage from '@/pages/LoginPage'
 import SignupPage from '@/pages/SignupPage'
 import AuthCallbackPage from '@/pages/AuthCallbackPage'
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
+import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import CategoriesPage from '@/pages/CategoriesPage'
 import RecurringPage from '@/pages/RecurringPage'
 import RecurringProcessor from '@/components/RecurringProcessor'
@@ -46,6 +48,8 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route element={<AuthenticatedLayout />}>
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/expenses" element={<ExpensesPage />} />

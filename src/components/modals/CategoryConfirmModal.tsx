@@ -4,7 +4,7 @@ import { useAppSelector, useAppDispatch } from '@/store'
 import { closeCategoryModal } from '@/store/slices/uiSlice'
 import { useAddCategory } from '@/hooks/useCategories'
 import { suggestCategoryMeta } from '@/lib/ai'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface CategoryConfirmModalProps {
   onCategoryCreated: (categoryId: string) => void
@@ -16,6 +16,13 @@ export default function CategoryConfirmModal({ onCategoryCreated }: CategoryConf
   const addCategory = useAddCategory()
   const [loading, setLoading] = useState(false)
   const [suggestion, setSuggestion] = useState<{ icon: string; color: string } | null>(null)
+  const [customColor, setCustomColor] = useState('#3b82f6')
+
+  useEffect(() => {
+    if (isOpen) {
+      setCustomColor('#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'))
+    }
+  }, [isOpen])
 
   const handleConfirm = async () => {
     setLoading(true)
@@ -28,7 +35,7 @@ export default function CategoryConfirmModal({ onCategoryCreated }: CategoryConf
       const result = await addCategory.mutateAsync({
         name: categoryName,
         icon: meta.icon,
-        color: meta.color,
+        color: customColor,
       })
       onCategoryCreated(result.id)
       dispatch(closeCategoryModal())
@@ -84,17 +91,23 @@ export default function CategoryConfirmModal({ onCategoryCreated }: CategoryConf
               Should I create a new category for this?
             </p>
 
-            {suggestion && (
+            {suggestion ? (
               <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
                 <Sparkles className="w-4 h-4 text-emerald-400" />
                 <span className="text-sm text-slate-300">
                   AI suggests icon:{' '}
-                  <code className="text-emerald-400">{suggestion.icon}</code> with color{' '}
-                  <span
-                    className="inline-block w-4 h-4 rounded-full align-middle border border-slate-600"
-                    style={{ backgroundColor: suggestion.color }}
-                  />
+                  <code className="text-emerald-400">{suggestion.icon}</code>
                 </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                <span className="text-sm text-slate-300">Choose category color:</span>
+                <input 
+                  type="color" 
+                  value={customColor} 
+                  onChange={(e) => setCustomColor(e.target.value)} 
+                  className="w-8 h-8 rounded cursor-pointer shrink-0 border-0 bg-transparent p-0"
+                />
               </div>
             )}
 

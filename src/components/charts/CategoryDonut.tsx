@@ -72,6 +72,7 @@ export default function CategoryDonut({ expenses }: CategoryDonutProps) {
               color: '#f1f5f9',
               fontSize: '0.875rem',
             }}
+            itemStyle={{ color: '#f8fafc' }}
             formatter={(value: number) => [fmt(value), 'Amount']}
           />
         </PieChart>

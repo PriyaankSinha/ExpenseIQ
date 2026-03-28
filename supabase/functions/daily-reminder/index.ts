@@ -8,7 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://sxrjsusozqeioldhtuex.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -17,38 +17,71 @@ interface ProfileRow {
   full_name: string | null;
   notification_time: string | null;
   last_notified_at: string | null;
+  timezone: string | null;
 }
 
 Deno.serve(async (_req: Request) => {
   try {
     const now = new Date();
-    const currentTime = now.toTimeString().slice(0, 5); // "HH:MM"
-    const todayStr = now.toISOString().split("T")[0];
 
-    // Find users whose notification_time is within the current 15-min window
-    // and haven't been notified today
+    // Get all users with notification settings
     const { data: profiles, error: profileErr } = await supabase
       .from("profiles")
-      .select("id, full_name, notification_time, last_notified_at")
+      .select("id, full_name, notification_time, last_notified_at, timezone")
       .not("notification_time", "is", null);
 
     if (profileErr) throw profileErr;
 
     const eligibleUsers = ((profiles as ProfileRow[]) ?? []).filter((p: ProfileRow) => {
       if (!p.notification_time) return false;
+
+      // Get current time in user's timezone (default Asia/Kolkata)
+      const userTimezone = p.timezone || "Asia/Kolkata";
+      const userLocalTime = new Intl.DateTimeFormat("en-GB", {
+        timeZone: userTimezone,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(now); // e.g. "18:10"
+
+      const userLocalDate = new Intl.DateTimeFormat("en-CA", {
+        timeZone: userTimezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(now); // e.g. "2026-03-28"
+
       const notifTime = p.notification_time.slice(0, 5);
-      const alreadyNotified =
-        p.last_notified_at && p.last_notified_at.startsWith(todayStr);
-      return notifTime <= currentTime && !alreadyNotified;
+      
+      // Check if already notified today (in user's local date)
+      const alreadyNotified = p.last_notified_at && p.last_notified_at.startsWith(userLocalDate);
+
+      // Within a 15-minute window after the notification time
+      const [notifH, notifM] = notifTime.split(":").map(Number);
+      const [currH, currM] = userLocalTime.split(":").map(Number);
+      const notifMinutes = (notifH ?? 0) * 60 + (notifM ?? 0);
+      const currMinutes = (currH ?? 0) * 60 + (currM ?? 0);
+      const inWindow = currMinutes >= notifMinutes && currMinutes < notifMinutes + 15;
+
+      return inWindow && !alreadyNotified;
     });
 
     for (const user of eligibleUsers) {
-      // Check if user has any expense today
+      // Get user's local date for the expense check
+      const userTimezone = user.timezone || "Asia/Kolkata";
+      const userLocalDate = new Intl.DateTimeFormat("en-CA", {
+        timeZone: userTimezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(now);
+
+      // Check if user has any expense today (in their local date)
       const { count } = await supabase
         .from("expenses")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
-        .eq("date", todayStr);
+        .eq("date", userLocalDate);
 
       if ((count ?? 0) > 0) continue; // Already logged today
 
@@ -64,7 +97,7 @@ Deno.serve(async (_req: Request) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "SpendSmart AI <notifications@spendsmart.app>",
+          from: "SpendSmart AI <onboarding@resend.dev>",
           to: authUser.user.email,
           subject: "💸 Don't forget to track your expenses today!",
           html: `
@@ -82,7 +115,7 @@ Deno.serve(async (_req: Request) => {
                 Take a moment to track your spending — your future self will thank you!
               </p>
               <div style="text-align: center; margin-top: 24px;">
-                <a href="${SUPABASE_URL.replace(".supabase.co", ".vercel.app")}"
+                <a href="https://spendsmartai.vercel.app/"
                    style="display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none; padding: 12px 28px; border-radius: 12px; font-weight: 600; font-size: 14px;">
                   Log an Expense →
                 </a>

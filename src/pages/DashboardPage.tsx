@@ -13,6 +13,8 @@ import CategoryDonut from '@/components/charts/CategoryDonut'
 import SpendingArea from '@/components/charts/SpendingArea'
 import SmartExpenseInput from '@/components/SmartExpenseInput'
 import AISavingsCoach from '@/components/AISavingsCoach'
+import BudgetVsActualChart from '@/components/charts/BudgetVsActualChart'
+import MonthEndForecast from '@/components/widgets/MonthEndForecast'
 import CategoryConfirmModal from '@/components/modals/CategoryConfirmModal'
 import { useExpenses, useAddExpense } from '@/hooks/useExpenses'
 import { useCategories, findCategoryByName } from '@/hooks/useCategories'
@@ -81,15 +83,33 @@ export default function DashboardPage() {
     if (!monthlyIncome) return []
     const data = []
     
+    // Find earliest active date (first expense)
+    let earliestActiveDate = today
+    if (allExpenses.length > 0) {
+      const dates = allExpenses.map(e => e.date)
+      const earliestExpStr = dates.reduce((min, d) => d < min ? d : min, dates[0] as string)
+      const parts = earliestExpStr.split('-')
+      earliestActiveDate = new Date(parseInt(parts[0] || '0', 10), parseInt(parts[1] || '0', 10) - 1, 1)
+    }
+    const activeThreshold = new Date(earliestActiveDate.getFullYear(), earliestActiveDate.getMonth(), 1)
+    
     // Last 6 months (including current)
     for (let i = 0; i < 6; i++) {
         const d = subMonths(today, i)
         const dStart = new Date(d.getFullYear(), d.getMonth(), 1)
         const dEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0)
         
+        // Zero out savings for months prior to the user joining/starting to track
+        if (dStart < activeThreshold && i !== 0) {
+            data.push({
+                monthStr: format(d, 'MMM'),
+                savings: 0
+            })
+            continue
+        }
+
         let monthExpenses = 0
         allExpenses.forEach(exp => {
-            // Need to parse date without timezone shifting issues
             const parts = exp.date.split('-')
             const y = parseInt(parts[0] || '0', 10)
             const m = parseInt(parts[1] || '0', 10)
@@ -107,13 +127,14 @@ export default function DashboardPage() {
         })
     }
     return data
-  }, [allExpenses, monthlyIncome, today])
+  }, [allExpenses, monthlyIncome, today, profile])
 
   const avgMonthlySavings = useMemo(() => {
-      if (savingsData.length === 0) return 0;
-      const sum = savingsData.reduce((acc, curr) => acc + curr.savings, 0);
-      return sum / savingsData.length;
-  }, [savingsData])
+      const activeMonths = savingsData.filter(d => d.savings !== 0 || d.monthStr === format(today, 'MMM'))
+      if (activeMonths.length === 0) return 0;
+      const sum = activeMonths.reduce((acc, curr) => acc + curr.savings, 0);
+      return sum / activeMonths.length;
+  }, [savingsData, today])
 
   const remainingMonths = 12 - today.getMonth()
   const projectedYearEndSavings = totalSavings + (avgMonthlySavings * remainingMonths)
@@ -219,45 +240,69 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Charts & Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-        {/* Spending Trend */}
-        <motion.div variants={item} className="xl:col-span-2">
-          <BentoCard>
-            <h3 className="text-sm font-semibold text-slate-200 mb-4">Spending Trend</h3>
-            <SpendingArea expenses={allExpenses} />
+      {/* AI Coach (Full Width) */}
+      <motion.div variants={item}>
+        <AISavingsCoach 
+          monthlyIncome={monthlyIncome}
+          monthlySavingGoal={monthlySavingGoal}
+          projectedSavings={projectedYearEndSavings}
+          goals={goals}
+        />
+      </motion.div>
+
+      {/* Advanced Budget & Forecast Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div variants={item} className="lg:col-span-2">
+          <BentoCard className="h-full border border-slate-800/60 bg-slate-900/50">
+            <BudgetVsActualChart expenses={expenses} categories={categories} />
           </BentoCard>
         </motion.div>
 
-        {/* AI Coach */}
         <motion.div variants={item}>
-          <AISavingsCoach 
-            monthlyIncome={monthlyIncome}
-            monthlySavingGoal={monthlySavingGoal}
-            projectedSavings={projectedYearEndSavings}
-            goals={goals}
-          />
+          <BentoCard className="h-full border border-slate-800/60 bg-slate-900/50">
+             <MonthEndForecast totalBudget={monthlyIncome - monthlySavingGoal} currentSpending={totalSpent} />
+          </BentoCard>
         </motion.div>
       </div>
 
-      {/* Savings Trend */}
-      <motion.div variants={item}>
-        <BentoCard>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-slate-200">Savings Rate (6 Mo)</h3>
-            <p className="text-xs text-slate-400">
-              Avg: <span className="font-semibold text-slate-200">{fmt(avgMonthlySavings)}</span> / mo
-            </p>
-          </div>
-          <SavingsTrendChart savingsData={savingsData} />
-        </BentoCard>
-      </motion.div>
-
-      {/* Recent & Coach */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Recent Expenses */}
+      {/* Main Grid: Graphs & Lists */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Row 1: Spending Trend + Category Donut */}
         <motion.div variants={item} className="lg:col-span-2">
-          <BentoCard>
+          <BentoCard className="h-full flex flex-col">
+            <h3 className="text-sm font-semibold text-slate-200 mb-4 shrink-0">Spending Trend (30 Days)</h3>
+            <div className="flex-1 w-full min-h-[220px]">
+              <SpendingArea expenses={allExpenses} />
+            </div>
+          </BentoCard>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <BentoCard className="h-full flex flex-col">
+            <h3 className="text-sm font-semibold text-slate-200 mb-4 shrink-0">By Category</h3>
+            <div className="flex-1 w-full min-h-[220px] flex flex-col">
+              <CategoryDonut expenses={expenses} />
+            </div>
+          </BentoCard>
+        </motion.div>
+
+        {/* Row 2: Savings Trend + Recent Expenses */}
+        <motion.div variants={item} className="lg:col-span-2">
+          <BentoCard className="h-full flex flex-col">
+            <div className="flex items-center justify-between mb-4 shrink-0">
+              <h3 className="text-sm font-semibold text-slate-200">Savings Rate (6 Mo)</h3>
+              <p className="text-xs text-slate-400">
+                Avg: <span className="font-semibold text-slate-200">{fmt(avgMonthlySavings)}</span> / mo
+              </p>
+            </div>
+            <div className="flex-1 w-full min-h-[250px]">
+              <SavingsTrendChart savingsData={savingsData} />
+            </div>
+          </BentoCard>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <BentoCard className="h-full">
             <h3 className="text-sm font-semibold text-slate-200 mb-4">Recent Expenses</h3>
             {recentExpenses.length === 0 ? (
               <p className="text-sm text-slate-500">
@@ -280,30 +325,22 @@ export default function DashboardPage() {
                       >
                         {expense.category?.name?.charAt(0) || '?'}
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-200">
+                      <div className="truncate">
+                        <p className="text-sm font-medium text-slate-200 truncate">
                           {expense.merchant || expense.category?.name || 'Expense'}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-slate-500 truncate">
                           {expense.category?.name} • {format(new Date(expense.date), 'MMM dd')}
                         </p>
                       </div>
                     </div>
-                    <span className="text-sm font-semibold text-slate-200">
+                    <span className="text-sm font-semibold text-slate-200 shrink-0 ml-2">
                       -{fmt(expense.amount)}
                     </span>
                   </div>
                 ))}
               </div>
             )}
-          </BentoCard>
-        </motion.div>
-
-        {/* Category Breakdown */}
-        <motion.div variants={item}>
-          <BentoCard>
-            <h3 className="text-sm font-semibold text-slate-200 mb-4">By Category</h3>
-            <CategoryDonut expenses={expenses} />
           </BentoCard>
         </motion.div>
       </div>

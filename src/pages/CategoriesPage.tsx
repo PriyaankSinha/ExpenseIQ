@@ -25,11 +25,12 @@ export default function CategoriesPage() {
 
   const [showAdd, setShowAdd] = useState(false)
   const [newCatName, setNewCatName] = useState('')
+  const [newCatColor, setNewCatColor] = useState('#3b82f6')
   const [addingAI, setAddingAI] = useState(false)
 
   // Edit states
   const [editingCatId, setEditingCatId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ name: '', budget: '' })
+  const [editForm, setEditForm] = useState({ name: '', budget: '', color: '' })
 
   const [confirmDeleteCat, setConfirmDeleteCat] = useState<{ id: string, name: string } | null>(null)
 
@@ -44,9 +45,10 @@ export default function CategoriesPage() {
       await addCategory.mutateAsync({
         name: newCatName,
         icon: meta.icon,
-        color: meta.color
+        color: newCatColor
       })
       setNewCatName('')
+      setNewCatColor('#3b82f6')
       setShowAdd(false)
     } catch (err) {
       console.error(err)
@@ -59,8 +61,8 @@ export default function CategoriesPage() {
     const val = parseFloat(editForm.budget)
     const newBudget = isNaN(val) || val <= 0 ? null : val
     
-    if (cat.user_id && editForm.name !== cat.name) {
-      await updateCategory.mutateAsync({ id: cat.id, name: editForm.name, icon: cat.icon, color: cat.color })
+    if (cat.user_id && (editForm.name !== cat.name || editForm.color !== cat.color)) {
+      await updateCategory.mutateAsync({ id: cat.id, name: editForm.name, icon: cat.icon, color: editForm.color })
     }
     
     await updateBudget.mutateAsync({ id: cat.id, monthly_budget: newBudget })
@@ -93,9 +95,15 @@ export default function CategoriesPage() {
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
           <BentoCard>
             <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-emerald-400" /> Let AI generate a category
+              <Activity className="w-4 h-4 text-emerald-400" /> Create Custom Category
             </h3>
             <div className="flex gap-2">
+              <input 
+                type="color" 
+                value={newCatColor} 
+                onChange={(e) => setNewCatColor(e.target.value)} 
+                className="w-10 h-10 rounded cursor-pointer shrink-0 border-0 bg-transparent p-0"
+              />
               <input
                 type="text"
                 placeholder="E.g., Dog Toys, Subscription, Hobby..."
@@ -155,7 +163,7 @@ export default function CategoriesPage() {
                       <button
                         onClick={() => {
                             setEditingCatId(cat.id)
-                            setEditForm({ name: cat.name, budget: cat.monthly_budget?.toString() || '' })
+                            setEditForm({ name: cat.name, budget: cat.monthly_budget?.toString() || '', color: cat.color })
                         }}
                         className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
                       >
@@ -175,15 +183,28 @@ export default function CategoriesPage() {
 
                 {isEditing ? (
                   <div className="mt-auto space-y-2 pt-2 border-t border-slate-800/60">
-                    <div>
-                        <label className="text-xs text-slate-400 block mb-1">Monthly Budget Limit</label>
-                        <input
-                        type="number"
-                        placeholder="E.g., 500"
-                        value={editForm.budget}
-                        onChange={(e) => setEditForm(prev => ({...prev, budget: e.target.value}))}
-                        className="input-dark py-1.5 text-sm w-full"
-                        />
+                    <div className="flex gap-3">
+                      {cat.user_id && (
+                        <div className="shrink-0">
+                          <label className="text-xs text-slate-400 block mb-1">Color</label>
+                          <input
+                            type="color"
+                            value={editForm.color}
+                            onChange={(e) => setEditForm(prev => ({...prev, color: e.target.value}))}
+                            className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent p-0"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                          <label className="text-xs text-slate-400 block mb-1">Monthly Budget Limit</label>
+                          <input
+                          type="number"
+                          placeholder="E.g., 500"
+                          value={editForm.budget}
+                          onChange={(e) => setEditForm(prev => ({...prev, budget: e.target.value}))}
+                          className="input-dark py-1 text-sm w-full"
+                          />
+                      </div>
                     </div>
                     <div className="flex gap-2">
                         <button onClick={() => setEditingCatId(null)} className="flex-1 py-1.5 text-sm border border-slate-700 rounded-lg text-slate-400 hover:text-slate-200">
