@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Receipt, PiggyBank, Settings, Repeat, Tags, Plus } from 'lucide-react'
 
 const mobileNavItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Home' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Home' },
   { to: '/expenses', icon: Receipt, label: 'Expenses' },
   { to: '/recurring', icon: Repeat, label: 'Recurring' },
   { to: '/goals', icon: PiggyBank, label: 'Goals' },

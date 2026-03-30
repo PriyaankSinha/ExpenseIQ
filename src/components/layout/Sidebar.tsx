@@ -17,7 +17,7 @@ import { toggleSidebar } from '@/store/slices/uiSlice'
 import { useAuth } from '@/contexts/AuthContext'
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/expenses', icon: Receipt, label: 'Expenses' },
   { to: '/recurring', icon: Repeat, label: 'Recurring' },
   { to: '/goals', icon: PiggyBank, label: 'Goals' },

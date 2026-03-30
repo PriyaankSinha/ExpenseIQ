@@ -18,6 +18,7 @@ import CategoriesPage from '@/pages/CategoriesPage'
 import RecurringPage from '@/pages/RecurringPage'
 import RecurringProcessor from '@/components/RecurringProcessor'
 import LeadGenAssistant from '@/components/LeadGenAssistant'
+import LandingPage from '@/pages/LandingPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,8 +51,9 @@ export default function App() {
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/" element={<LandingPage />} />
               <Route element={<AuthenticatedLayout />}>
-                <Route path="/" element={<DashboardPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/expenses" element={<ExpensesPage />} />
                 <Route path="/recurring" element={<RecurringPage />} />
                 <Route path="/goals" element={<GoalsPage />} />
