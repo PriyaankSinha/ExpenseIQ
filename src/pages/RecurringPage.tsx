@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Repeat, Plus, Trash2, Calendar, X, Edit2 } from 'lucide-react'
 import BentoCard from '@/components/ui/BentoCard'
 import CustomSelect from '@/components/ui/CustomSelect'
@@ -9,6 +9,7 @@ import { useCategories } from '@/hooks/useCategories'
 import { useProfile } from '@/hooks/useProfile'
 import { useRecurringExpenses, useAddRecurring, useToggleRecurring, useDeleteRecurring, useUpdateRecurring } from '@/hooks/useRecurring'
 import { format, parseISO } from 'date-fns'
+import FuturisticLoader from '@/components/ui/FuturisticLoader'
 
 const FREQUENCIES = ['daily', 'weekly', 'monthly', 'yearly'] as const
 
@@ -84,10 +85,25 @@ export default function RecurringPage() {
     setForm(defaultForm)
   }
 
-  if (isLoading) return <div className="flex justify-center py-12"><div className="spinner" /></div>
-
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <div className="relative min-h-[400px]">
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 rounded-3xl overflow-hidden"
+          >
+            <FuturisticLoader fullPage text="Syncing rules..." />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: isLoading ? 0 : 1, y: isLoading ? 20 : 0 }} 
+        className="space-y-6"
+      >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Recurring Expenses</h1>
@@ -297,5 +313,6 @@ export default function RecurringPage() {
         }}
       />
     </motion.div>
+    </div>
   )
 }

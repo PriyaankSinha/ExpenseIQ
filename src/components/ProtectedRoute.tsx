@@ -1,15 +1,12 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import FuturisticLoader from '@/components/ui/FuturisticLoader'
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="spinner" />
-      </div>
-    )
+    return <FuturisticLoader overlay text="Authenticating..." />
   }
 
   if (!user) {

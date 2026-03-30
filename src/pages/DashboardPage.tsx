@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   Wallet,
   TrendingDown,
@@ -16,6 +16,7 @@ import AISavingsCoach from '@/components/AISavingsCoach'
 import BudgetVsActualChart from '@/components/charts/BudgetVsActualChart'
 import MonthEndForecast from '@/components/widgets/MonthEndForecast'
 import CategoryConfirmModal from '@/components/modals/CategoryConfirmModal'
+import FuturisticLoader from '@/components/ui/FuturisticLoader'
 import { useExpenses, useAddExpense } from '@/hooks/useExpenses'
 import { useCategories, findCategoryByName } from '@/hooks/useCategories'
 import { useSavingsGoals } from '@/hooks/useGoals'
@@ -23,6 +24,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import type { ParsedExpense } from '@/types/database'
 import SavingsTrendChart from '@/components/charts/SavingsTrendChart'
+import { safeFormat, safeNum } from '@/lib/ui-utils'
 
 const container = {
   hidden: { opacity: 0 },
@@ -42,40 +44,40 @@ export default function DashboardPage() {
   const monthStart = format(startOfMonth(today), 'yyyy-MM-dd')
   const monthEnd = format(endOfMonth(today), 'yyyy-MM-dd')
 
-  const { data: expenses = [] } = useExpenses({ from: monthStart, to: monthEnd })
-  const { data: allExpenses = [] } = useExpenses()
-  const { data: categories = [] } = useCategories()
-  const { data: goals = [] } = useSavingsGoals()
-  const { data: profile } = useProfile()
+  const { data: expenses = [], isLoading: loadingExp } = useExpenses({ from: monthStart, to: monthEnd })
+  const { data: allExpenses = [], isLoading: loadingAll } = useExpenses()
+  const { data: categories = [], isLoading: loadingCat } = useCategories()
+  const { data: goals = [], isLoading: loadingGoals } = useSavingsGoals()
+  const { data: profile, isLoading: loadingProfile } = useProfile()
   const addExpense = useAddExpense()
 
   const [pendingParsed, setPendingParsed] = useState<ParsedExpense | null>(null)
 
   const totalSpent = useMemo(
-    () => expenses.reduce((sum, e) => sum + e.amount, 0),
+    () => expenses.reduce((sum, e) => sum + safeNum(e.amount), 0),
     [expenses]
   )
 
   const monthlyIncome = profile?.monthly_income || 0
   const monthlySavingGoal = useMemo(() => {
-    const defaultGoal = goals.find(g => g.is_default)
+    const defaultGoal = (goals || []).find(g => g.is_default)
     return defaultGoal ? defaultGoal.target_amount : 0
   }, [goals])
 
   const budgetRemaining = monthlyIncome - monthlySavingGoal - totalSpent
 
   const totalSavings = useMemo(
-    () => goals.reduce((sum, g) => sum + g.current_amount, 0),
+    () => (goals || []).reduce((sum, g) => sum + (g.current_amount || 0), 0),
     [goals]
   )
 
   const totalSavingsTarget = useMemo(
-    () => goals.reduce((sum, g) => sum + g.target_amount, 0),
+    () => (goals || []).reduce((sum, g) => sum + (g.target_amount || 0), 0),
     [goals]
   )
 
   const recentExpenses = useMemo(
-    () => allExpenses.slice(0, 5),
+    () => (allExpenses || []).slice(0, 5),
     [allExpenses]
   )
 
@@ -85,13 +87,19 @@ export default function DashboardPage() {
     
     // Find earliest active date (first expense)
     let earliestActiveDate = today
-    if (allExpenses.length > 0) {
-      const dates = allExpenses.map(e => e.date)
-      const earliestExpStr = dates.reduce((min, d) => d < min ? d : min, dates[0] as string)
-      const parts = earliestExpStr.split('-')
-      earliestActiveDate = new Date(parseInt(parts[0] || '0', 10), parseInt(parts[1] || '0', 10) - 1, 1)
+    if ((allExpenses || []).length > 0) {
+      const dates = allExpenses.map(e => e.date).filter(Boolean)
+      if (dates.length > 0) {
+        const earliestExpStr = dates.reduce((min, d) => d < min ? d : min, dates[0] as string)
+        const parts = (earliestExpStr || '').split('-')
+        if (parts.length >= 3) {
+           earliestActiveDate = new Date(parseInt(parts[0] || '0', 10), parseInt(parts[1] || '0', 10) - 1, parseInt(parts[2] || '0', 10))
+        }
+      }
     }
-    const activeThreshold = new Date(earliestActiveDate.getFullYear(), earliestActiveDate.getMonth(), 1)
+    const isValidDate = earliestActiveDate instanceof Date && !isNaN(earliestActiveDate.getTime())
+    const thresholdDate = isValidDate ? earliestActiveDate : today
+    const activeThreshold = new Date(thresholdDate.getFullYear(), thresholdDate.getMonth(), 1)
     
     // Last 6 months (including current)
     for (let i = 0; i < 6; i++) {
@@ -110,13 +118,15 @@ export default function DashboardPage() {
 
         let monthExpenses = 0
         allExpenses.forEach(exp => {
+            if (!exp.date) return
             const parts = exp.date.split('-')
+            if (parts.length < 3) return
             const y = parseInt(parts[0] || '0', 10)
             const m = parseInt(parts[1] || '0', 10)
             const day = parseInt(parts[2] || '0', 10)
             const ed = new Date(y, m - 1, day)
             if (ed >= dStart && ed <= dEnd) {
-                monthExpenses += exp.amount
+                monthExpenses += (exp.amount || 0)
             }
         })
         
@@ -132,12 +142,12 @@ export default function DashboardPage() {
   const avgMonthlySavings = useMemo(() => {
       const activeMonths = savingsData.filter(d => d.savings !== 0 || d.monthStr === format(today, 'MMM'))
       if (activeMonths.length === 0) return 0;
-      const sum = activeMonths.reduce((acc, curr) => acc + curr.savings, 0);
-      return sum / activeMonths.length;
+      const sum = activeMonths.reduce((acc, curr) => acc + safeNum(curr.savings), 0);
+      return safeNum(sum / activeMonths.length);
   }, [savingsData, today])
 
-  const remainingMonths = 12 - today.getMonth()
-  const projectedYearEndSavings = totalSavings + (avgMonthlySavings * remainingMonths)
+  const remainingMonths = Math.max(0, 12 - today.getMonth())
+  const projectedYearEndSavings = safeNum(totalSavings + (avgMonthlySavings * remainingMonths))
 
   const handleNeedCategory = useCallback((parsed: ParsedExpense) => {
     setPendingParsed(parsed)
@@ -163,8 +173,23 @@ export default function DashboardPage() {
   const fmt = (n: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n)
 
+  const isLoading = loadingExp || loadingAll || loadingCat || loadingGoals || loadingProfile
+
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+    <div className="relative min-h-[400px]">
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 rounded-3xl overflow-hidden"
+          >
+            <FuturisticLoader fullPage text="Analyzing your finances..." />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div variants={container} initial="hidden" animate="show" className={`space-y-6 transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
       {/* Smart Input */}
       <motion.div variants={item}>
         <SmartExpenseInput onNeedCategory={handleNeedCategory} />
@@ -340,7 +365,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-slate-500 uppercase tracking-wider">
-                      <span>{format(new Date(expense.date), 'MMM dd, yyyy')}</span>
+                      <span>{safeFormat(expense.date, 'MMM dd, yyyy')}</span>
                     </div>
                   </div>
                 ))}
@@ -353,5 +378,6 @@ export default function DashboardPage() {
       {/* Category Modal */}
       <CategoryConfirmModal onCategoryCreated={handleCategoryCreated} />
     </motion.div>
+    </div>
   )
 }

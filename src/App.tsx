@@ -19,6 +19,7 @@ import RecurringPage from '@/pages/RecurringPage'
 import RecurringProcessor from '@/components/RecurringProcessor'
 import LeadGenAssistant from '@/components/LeadGenAssistant'
 import LandingPage from '@/pages/LandingPage'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,11 +32,13 @@ const queryClient = new QueryClient({
 
 function AuthenticatedLayout() {
   return (
-    <ProtectedRoute>
-      <RecurringProcessor />
-      <AppLayout />
-      <LeadGenAssistant />
-    </ProtectedRoute>
+    <ErrorBoundary>
+      <ProtectedRoute>
+        <RecurringProcessor />
+        <AppLayout />
+        <LeadGenAssistant />
+      </ProtectedRoute>
+    </ErrorBoundary>
   )
 }
 

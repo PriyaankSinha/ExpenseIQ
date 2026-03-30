@@ -9,6 +9,8 @@ import { useExpenses, useAddExpense, useDeleteExpense, useUpdateExpense } from '
 import { useCategories } from '@/hooks/useCategories'
 import { format } from 'date-fns'
 import { useProfile } from '@/hooks/useProfile'
+import FuturisticLoader from '@/components/ui/FuturisticLoader'
+import { safeFormat } from '@/lib/ui-utils'
 
 export default function ExpensesPage() {
   const { data: expenses = [], isLoading } = useExpenses()
@@ -236,9 +238,7 @@ export default function ExpensesPage() {
       {/* Expense List */}
       <BentoCard hover={false}>
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="spinner" />
-          </div>
+          <FuturisticLoader fullPage text="Syncing expenses..." />
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
             <Receipt className="w-12 h-12 text-slate-700 mx-auto mb-3" />

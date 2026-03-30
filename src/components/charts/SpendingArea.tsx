@@ -10,6 +10,7 @@ import {
 import { format, parseISO, startOfDay, eachDayOfInterval, subDays } from 'date-fns'
 import type { Expense } from '@/types/database'
 import { useProfile } from '@/hooks/useProfile'
+import { safeFormat, safeNum } from '@/lib/ui-utils'
 
 interface SpendingAreaProps {
   expenses: Expense[]
@@ -33,16 +34,17 @@ export default function SpendingArea({ expenses, days = 30 }: SpendingAreaProps)
   })
 
   expenses.forEach((e) => {
-    const dateStr = e.date
+    const dateStr = e.date || ''
     if (dailyMap.has(dateStr)) {
-      dailyMap.set(dateStr, (dailyMap.get(dateStr) || 0) + e.amount)
+      const current = safeNum(dailyMap.get(dateStr))
+      dailyMap.set(dateStr, current + safeNum(e.amount))
     }
   })
 
   const data = Array.from(dailyMap.entries()).map(([date, amount]) => ({
     date,
-    amount,
-    label: format(parseISO(date), 'MMM dd'),
+    amount: safeNum(amount),
+    label: safeFormat(date, 'MMM dd'),
   }))
 
   return (

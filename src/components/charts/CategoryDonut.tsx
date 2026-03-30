@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import type { Expense } from '@/types/database'
 import { useProfile } from '@/hooks/useProfile'
+import { safeNum } from '@/lib/ui-utils'
 
 interface CategoryDonutProps {
   expenses: Expense[]
@@ -25,11 +26,11 @@ export default function CategoryDonut({ expenses }: CategoryDonutProps) {
     const key = cat?.name || 'Uncategorized'
     const existing = categoryMap.get(key)
     if (existing) {
-      existing.total += e.amount
+      existing.total += safeNum(e.amount)
     } else {
       categoryMap.set(key, {
         name: key,
-        total: e.amount,
+        total: safeNum(e.amount),
         color: cat?.color || '#64748b',
       })
     }

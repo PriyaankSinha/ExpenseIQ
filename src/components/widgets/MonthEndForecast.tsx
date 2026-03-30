@@ -103,7 +103,7 @@ export default function MonthEndForecast({ totalBudget, currentSpending }: Month
         <div className="flex items-center justify-between text-xs mb-2">
           <span className="text-slate-400">Spend progress</span>
           <span className="text-slate-400">
-            <span className="text-slate-200 font-medium">{stats.rawProgress.toFixed(0)}%</span> of {fmt(totalBudget)} budget
+            <span className="text-slate-200 font-medium">{isFinite(stats.rawProgress) ? stats.rawProgress.toFixed(0) : '0'}%</span> of {fmt(totalBudget)} budget
           </span>
         </div>
         <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">

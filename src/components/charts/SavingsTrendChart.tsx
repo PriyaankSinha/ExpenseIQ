@@ -10,6 +10,7 @@ import {
   Cell
 } from 'recharts'
 import { useProfile } from '@/hooks/useProfile'
+import { safeNum } from '@/lib/ui-utils'
 
 interface SavingsTrendChartProps {
   savingsData: {
@@ -30,7 +31,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <div className="bg-slate-800 border border-slate-700 p-3 rounded-lg shadow-xl">
         <p className="text-slate-300 text-sm mb-1">{label}</p>
         <p className={`text-base font-bold ${isPositive ? 'text-sky-400' : 'text-rose-400'}`}>
-          {isPositive ? '+' : ''}{fmt(payload[0].value)}
+          {isPositive ? '+' : ''}{fmt(safeNum(payload[0].value))}
         </p>
       </div>
     )

@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import type { Expense, Category } from '@/types/database'
 import { useProfile } from '@/hooks/useProfile'
+import { safeNum } from '@/lib/ui-utils'
 
 interface BudgetVsActualChartProps {
   expenses: Expense[]
@@ -49,12 +50,12 @@ export default function BudgetVsActualChart({ expenses, categories }: BudgetVsAc
     const budgetedCategories = categories.filter(c => (c.monthly_budget || 0) > 0)
     
     const aggregated = budgetedCategories.map(cat => {
+      const budget = safeNum(cat.monthly_budget)
       const spent = expenses
         .filter(e => e.category_id === cat.id)
-        .reduce((sum, e) => sum + e.amount, 0)
+        .reduce((sum, e) => sum + safeNum(e.amount), 0)
         
-      const budget = cat.monthly_budget || 0
-      const ratio = budget > 0 ? (spent / budget) * 100 : 0
+      const ratio = safeNum(budget > 0 ? (spent / budget) * 100 : 0)
       
       return {
         id: cat.id,

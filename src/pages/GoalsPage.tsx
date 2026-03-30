@@ -7,6 +7,7 @@ import ConfirmModal from '@/components/modals/ConfirmModal'
 import { useSavingsGoals, useAddGoal, useUpdateGoal, useDeleteGoal } from '@/hooks/useGoals'
 import { useProfile } from '@/hooks/useProfile'
 import { format } from 'date-fns'
+import FuturisticLoader from '@/components/ui/FuturisticLoader'
 
 export default function GoalsPage() {
   const { data: goals = [], isLoading } = useSavingsGoals()
@@ -152,9 +153,7 @@ export default function GoalsPage() {
 
       {/* Goals Grid */}
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="spinner" />
-        </div>
+        <FuturisticLoader fullPage text="Calculating milestones..." />
       ) : goals.length === 0 && !showAddForm ? (
         <BentoCard hover={false}>
           <div className="text-center py-12">

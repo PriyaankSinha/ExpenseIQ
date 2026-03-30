@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Tags, Settings, Activity, Trash2, Edit2, X } from 'lucide-react'
 import BentoCard from '@/components/ui/BentoCard'
 import ConfirmModal from '@/components/modals/ConfirmModal'
@@ -8,6 +8,7 @@ import { useExpenses } from '@/hooks/useExpenses'
 import { useProfile } from '@/hooks/useProfile'
 import { suggestCategoryMeta } from '@/lib/ai'
 import { startOfMonth, endOfMonth, format } from 'date-fns'
+import FuturisticLoader from '@/components/ui/FuturisticLoader'
 
 export default function CategoriesPage() {
   const { data: categories = [], isLoading } = useCategories()
@@ -73,10 +74,25 @@ export default function CategoriesPage() {
     return expenses.filter(e => e.category_id === catId).reduce((sum, e) => sum + e.amount, 0)
   }
 
-  if (isLoading) return <div className="flex justify-center py-12"><div className="spinner" /></div>
-
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <div className="relative min-h-[400px]">
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 rounded-3xl overflow-hidden"
+          >
+            <FuturisticLoader fullPage text="Mapping categories..." />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: isLoading ? 0 : 1, y: isLoading ? 20 : 0 }} 
+        className="space-y-6"
+      >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Categories & Budgets</h1>
@@ -262,5 +278,6 @@ export default function CategoriesPage() {
         }}
       />
     </motion.div>
+    </div>
   )
 }

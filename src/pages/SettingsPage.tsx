@@ -7,6 +7,7 @@ import CustomSelect from '@/components/ui/CustomSelect'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
 import { useAuth } from '@/contexts/AuthContext'
 import { getFixedPos } from '@/lib/ui-utils'
+import FuturisticLoader from '@/components/ui/FuturisticLoader'
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'INR', 'CAD', 'AUD', 'JPY']
 const CURRENCY_OPTIONS = CURRENCIES.map(c => ({ label: c, value: c }))
@@ -177,20 +178,25 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000)
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="spinner" />
-      </div>
-    )
-  }
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
+    <div className="relative min-h-[400px]">
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 rounded-3xl overflow-hidden"
+          >
+            <FuturisticLoader fullPage text="Syncing preferences..." />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: isLoading ? 0 : 1, y: isLoading ? 20 : 0 }}
+        className="space-y-6"
+      >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Settings</h1>
@@ -308,5 +314,6 @@ export default function SettingsPage() {
         </div>
       </BentoCard>
     </motion.div>
+    </div>
   )
 }
