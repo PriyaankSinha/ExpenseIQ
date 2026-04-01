@@ -85,15 +85,19 @@ export default function MonthEndForecast({ totalBudget, currentSpending }: Month
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-4 mb-8">
+        <div className="min-w-0">
           <p className="text-sm text-slate-400 mb-1">Current Spending</p>
-          <p className="text-3xl font-bold text-slate-100 mb-1">{fmt(currentSpending)}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-slate-100 mb-1 truncate" title={fmt(currentSpending)}>
+            {fmt(currentSpending)}
+          </p>
           <p className="text-xs text-slate-500">{daysElapsed} days elapsed</p>
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-sm text-slate-400 mb-1">Projected Total</p>
-          <p className={`text-3xl font-bold mb-1 ${textProjectedColor}`}>{fmt(projectedTotal)}</p>
+          <p className={`text-2xl sm:text-3xl font-bold mb-1 truncate ${textProjectedColor}`} title={fmt(projectedTotal)}>
+            {fmt(projectedTotal)}
+          </p>
           <p className="text-xs text-slate-500">by end of month</p>
         </div>
       </div>
@@ -117,9 +121,9 @@ export default function MonthEndForecast({ totalBudget, currentSpending }: Month
       {/* Alerts & Advisories container */}
       <div className="mt-auto">
         {/* Status Box */}
-        <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3 mb-4 flex items-start gap-3">
+        <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3 mb-4 flex items-start gap-3 min-w-0">
           <ArrowRight className={`w-4 h-4 shrink-0 mt-0.5 ${isOverProjected ? 'text-rose-400' : 'text-emerald-400'}`} />
-          <p className="text-sm font-medium text-slate-300">
+          <p className="text-sm font-medium text-slate-300 break-words leading-relaxed">
             {isOverProjected ? (
               <>Projected to exceed budget by <span className="text-rose-400">{fmt(excessProjected)}</span></>
             ) : (
