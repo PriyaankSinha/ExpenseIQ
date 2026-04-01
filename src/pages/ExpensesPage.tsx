@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Plus, Trash2, Search, Filter, Calendar, Receipt, Edit2, X } from 'lucide-react'
 import BentoCard from '@/components/ui/BentoCard'
 import CustomDatePicker from '@/components/ui/CustomDatePicker'
+import MonthYearPicker from '@/components/ui/MonthYearPicker'
 import CustomSelect from '@/components/ui/CustomSelect'
 import ConfirmModal from '@/components/modals/ConfirmModal'
 import { useExpenses, useAddExpense, useDeleteExpense, useUpdateExpense } from '@/hooks/useExpenses'
@@ -23,7 +24,7 @@ export default function ExpensesPage() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
-  const [monthFilter, setMonthFilter] = useState('')
+  const [monthFilter, setMonthFilter] = useState(format(new Date(), 'yyyy-MM'))
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -42,23 +43,6 @@ export default function ExpensesPage() {
   const fmt = (n: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n)
 
-  const monthOptions = useMemo(() => {
-    const uniqueMonths = new Set<string>()
-    expenses.forEach(e => {
-        if (e.date) uniqueMonths.add(e.date.slice(0, 7))
-    })
-    
-    return Array.from(uniqueMonths)
-      .sort((a, b) => b.localeCompare(a)) // Sort desc (recent first)
-      .map(monthStr => {
-        const parts = monthStr.split('-')
-        const d = new Date(parseInt(parts[0] || '0', 10), parseInt(parts[1] || '0', 10) - 1, 1)
-        return {
-           label: format(d, 'MMMM yyyy'),
-           value: monthStr
-        }
-      })
-  }, [expenses])
 
   const filtered = useMemo(() => {
     return expenses.filter((e) => {
@@ -128,7 +112,7 @@ export default function ExpensesPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Expenses</h1>
           <p className="text-sm text-slate-500 mt-1">
-            {expenses.length} total expenses • {fmt(expenses.reduce((s, e) => s + e.amount, 0))} spent
+            {filtered.length} expenses • {fmt(filtered.reduce((s, e) => s + e.amount, 0))} spent this period
           </p>
         </div>
         <button
@@ -219,12 +203,10 @@ export default function ExpensesPage() {
             className="input-dark pl-10 py-2 text-sm w-full"
           />
         </div>
-        <CustomSelect
+        <MonthYearPicker
           value={monthFilter}
           onChange={(v) => setMonthFilter(v)}
-          options={[{ label: 'All Time', value: '' }, ...monthOptions]}
-          className="w-full sm:w-40 shrink-0"
-          icon={<Calendar className="w-4 h-4" />}
+          className="w-full sm:w-48 shrink-0"
         />
         <CustomSelect
           value={categoryFilter}
